@@ -1,3 +1,4 @@
+# list all models you want to use here
 sd-v1-5.safetensors
 babes_30.safetensors
 cyberrealistic_v41BackToBasics.safetensors

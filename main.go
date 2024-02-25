@@ -149,10 +149,14 @@ func main() {
 	r = time.Now().Nanosecond()
 
 	for index, model := range models {
+		strings.TrimSpace(model)
+		if strings.HasPrefix(model, "#") {
+			continue
+		}
 		tss = fmt.Sprintf("%d", time.Now().Unix())
-		mmodel := strings.TrimSpace(model)
+
 		//tss = time.Now().Format("2006-01-02-15-04-05")
-		fmt.Println("index:", index, "tss:", tss, "model:", mmodel)
+		fmt.Println("index:", index, "tss:", tss, "model:", model)
 
 		firstpass(prompt, nprompt, model, r)
 
