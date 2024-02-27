@@ -32,6 +32,7 @@ type Stable struct {
 }
 
 func firstpass(prompt, nprompt, model string, r int) {
+	fmt.Println("firstpass")
 	sd := Stable{}
 	sd.RandomNumber = r
 	sd.SmallImage = timedir + "/" + tss + "-" + "small.jpg"
@@ -66,8 +67,9 @@ func firstpass(prompt, nprompt, model string, r int) {
 	cmd = exec.Command("./installer_files/env/bin/python", "mm.py")
 	err = cmd.Run()
 	if err != nil {
-		os.Exit(1)
 		fmt.Fprintln(os.Stderr, "s1 Start:", err)
+		os.Exit(1)
+
 		return
 	}
 	// err = cmd.Wait()
@@ -79,6 +81,7 @@ func firstpass(prompt, nprompt, model string, r int) {
 }
 
 func secondpass(prompt, nprompt, model string, r int) {
+	fmt.Println("secondpass")
 	sd := Stable{}
 	sd.RandomNumber = r
 	sd.SmallImage = timedir + "/" + tss + "-" + "small.jpg"
@@ -134,6 +137,9 @@ func main() {
 	//flag.IntVar(&r, "r", 0, "random number")
 	flag.Parse()
 
+	os.Remove("mm.py")
+	os.Remove("mn.py")
+
 	timedir = "/mnt/nfs_clientshare/stable/" + time.Now().Format("2006-01-02-15-04-05")
 	err := os.MkdirAll(timedir, 0777)
 	if err != nil {
@@ -149,7 +155,7 @@ func main() {
 	r = time.Now().Nanosecond()
 
 	for index, model := range models {
-		strings.TrimSpace(model)
+		model = strings.TrimSpace(model)
 		if strings.HasPrefix(model, "#") {
 			continue
 		}
