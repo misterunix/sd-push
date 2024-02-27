@@ -121,6 +121,7 @@ func secondpass(prompt, nprompt, model string, r int) {
 	// 	fmt.Fprintln(os.Stderr, "s2 Wait:", err)
 	// 	return
 	// }
+	os.Remove(sd.SmallImage)
 
 }
 
@@ -179,5 +180,6 @@ func main() {
 		// 	fmt.Fprintln(os.Stderr, "Wait:", err)
 		// 	return
 		// }
+
 	}
 }
