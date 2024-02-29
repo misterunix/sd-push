@@ -125,16 +125,46 @@ func secondpass(prompt, nprompt, model string, r int) {
 
 }
 
+func runAllModels(prompt, nprompt string) {
+	r := time.Now().Nanosecond()
+
+	m, err := os.ReadFile("models.txt")
+	if err != nil {
+		panic(err)
+	}
+	mo := string(m)
+	models := strings.Split(mo, "\n")
+	r = time.Now().Nanosecond()
+
+	for index, model := range models {
+
+		model = strings.TrimSpace(model)
+		if strings.HasPrefix(model, "#") {
+			continue
+		}
+		tss = fmt.Sprintf("%d", time.Now().Unix())
+
+		fmt.Println("index:", index, "tss:", tss, "model:", model)
+
+		firstpass(prompt, nprompt, model, r)
+
+		secondpass(prompt, nprompt, model, r)
+
+	}
+}
+
 func main() {
 
 	var prompt string
 	var nprompt string
-	//var model string
+	var modelcli string
 	var r int
-
+	var count int
 	flag.StringVar(&prompt, "prompt", "prompt", "prompt")
 	flag.StringVar(&nprompt, "nprompt", "nprompt", "nprompt")
-	//flag.StringVar(&model, "model", "model", "model")
+	flag.StringVar(&modelcli, "model", "model", "model")
+	flag.IntVar(&count, "count", 1, "count")
+
 	//flag.IntVar(&r, "r", 0, "random number")
 	flag.Parse()
 
@@ -147,39 +177,33 @@ func main() {
 		panic(err)
 	}
 
+	if modelcli == "" {
+		runAllModels(prompt, nprompt)
+		os.Exit(0)
+	}
+
 	m, err := os.ReadFile("models.txt")
 	if err != nil {
 		panic(err)
 	}
 	mo := string(m)
 	models := strings.Split(mo, "\n")
-	r = time.Now().Nanosecond()
 
-	for index, model := range models {
-		model = strings.TrimSpace(model)
-		if strings.HasPrefix(model, "#") {
-			continue
+	for i := 0; i < count; i++ {
+
+		r = time.Now().Nanosecond()
+		for index, model := range models {
+			model = strings.TrimSpace(model)
+			if strings.HasPrefix(model, "#") {
+				continue
+			}
+			tss = fmt.Sprintf("%d", time.Now().Unix())
+			if model != modelcli {
+				fmt.Println("index:", index, "tss:", tss, "model:", model)
+				firstpass(prompt, nprompt, modelcli, r)
+				secondpass(prompt, nprompt, modelcli, r)
+				break
+			}
 		}
-		tss = fmt.Sprintf("%d", time.Now().Unix())
-
-		//tss = time.Now().Format("2006-01-02-15-04-05")
-		fmt.Println("index:", index, "tss:", tss, "model:", model)
-
-		firstpass(prompt, nprompt, model, r)
-
-		// err = cmd.Wait()
-		// if err != nil {
-		// 	fmt.Fprintln(os.Stderr, "Wait:", err)
-		// 	return
-		// }
-
-		secondpass(prompt, nprompt, model, r)
-
-		// err = cmd.Wait()
-		// if err != nil {
-		// 	fmt.Fprintln(os.Stderr, "Wait:", err)
-		// 	return
-		// }
-
 	}
 }
