@@ -160,6 +160,7 @@ func main() {
 	var modelcli string
 	var r int
 	var count int
+
 	flag.StringVar(&prompt, "prompt", "prompt", "prompt")
 	flag.StringVar(&nprompt, "nprompt", "nprompt", "nprompt")
 	flag.StringVar(&modelcli, "model", "model", "model")
@@ -189,21 +190,33 @@ func main() {
 	mo := string(m)
 	models := strings.Split(mo, "\n")
 
+	found := false
+	for _, model := range models {
+		model = strings.TrimSpace(model)
+		fmt.Println("model:", model, "modelcli:", modelcli)
+		if strings.HasPrefix(model, "#") {
+			continue
+		}
+		if model == modelcli {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		fmt.Println("model not found")
+		os.Exit(1)
+	}
+
 	for i := 0; i < count; i++ {
 
 		r = time.Now().Nanosecond()
-		for index, model := range models {
-			model = strings.TrimSpace(model)
-			if strings.HasPrefix(model, "#") {
-				continue
-			}
-			tss = fmt.Sprintf("%d", time.Now().Unix())
-			if model != modelcli {
-				fmt.Println("index:", index, "tss:", tss, "model:", model)
-				firstpass(prompt, nprompt, modelcli, r)
-				secondpass(prompt, nprompt, modelcli, r)
-				break
-			}
-		}
+
+		tss = fmt.Sprintf("%d", time.Now().Unix())
+
+		fmt.Println("i:", i, "tss:", tss, "modelcli:", modelcli)
+		firstpass(prompt, nprompt, modelcli, r)
+		secondpass(prompt, nprompt, modelcli, r)
+
 	}
 }
