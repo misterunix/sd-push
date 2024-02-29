@@ -208,15 +208,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	totalstart := time.Now()
 	for i := 0; i < count; i++ {
-
 		r = time.Now().Nanosecond()
-
 		tss = fmt.Sprintf("%d", time.Now().Unix())
-
 		fmt.Println("i:", i, "tss:", tss, "modelcli:", modelcli)
+		start := time.Now()
 		firstpass(prompt, nprompt, modelcli, r)
 		secondpass(prompt, nprompt, modelcli, r)
-
+		fmt.Println("time:", time.Since(start).Minutes())
 	}
+	fmt.Println("total time:", time.Since(totalstart).Minutes())
 }
