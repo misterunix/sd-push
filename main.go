@@ -32,6 +32,8 @@ type Stable struct {
 }
 
 func firstpass(prompt, nprompt, model string, r int) {
+	os.Remove("mm.py")
+	os.Remove("mn.py")
 	fmt.Println("firstpass")
 	sd := Stable{}
 	sd.RandomNumber = r
@@ -163,7 +165,7 @@ func main() {
 
 	flag.StringVar(&prompt, "prompt", "prompt", "prompt")
 	flag.StringVar(&nprompt, "nprompt", "nprompt", "nprompt")
-	flag.StringVar(&modelcli, "model", "model", "model")
+	flag.StringVar(&modelcli, "model", "", "model")
 	flag.IntVar(&count, "count", 1, "count")
 
 	//flag.IntVar(&r, "r", 0, "random number")
@@ -179,7 +181,9 @@ func main() {
 	}
 
 	if modelcli == "" {
-		runAllModels(prompt, nprompt)
+		for i := 0; i < count; i++ {
+			runAllModels(prompt, nprompt)
+		}
 		os.Exit(0)
 	}
 
