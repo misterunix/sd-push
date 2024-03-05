@@ -9,7 +9,7 @@ import (
 // then call CleanQuit to exit the program.
 func CheckFatal(e error) {
 	if e != nil {
-		fmt.Print(e)
+		fmt.Fprint(os.Stderr, "Error: ", e)
 		CleanQuit()
 	}
 }
