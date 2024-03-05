@@ -50,14 +50,11 @@ func firstpass(prompt, nprompt, model string, r int) {
 	passOne := "t.tpl"
 	// tmpl, err := template.New(passOne).ParseFiles(passOne)
 	tmpl, err := template.New(passOne).Parse(t)
-	if err != nil {
-		panic(err)
-	}
+	CheckFatal(err)
 
 	small, err := os.OpenFile("mm.py", os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		panic(err)
-	}
+	CheckFatal(err)
+
 	defer small.Close()
 
 	err = tmpl.Execute(small, sd)
@@ -68,12 +65,8 @@ func firstpass(prompt, nprompt, model string, r int) {
 
 	cmd = exec.Command("./installer_files/env/bin/python", "mm.py")
 	err = cmd.Run()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "s1 Start:", err)
-		os.Exit(1)
+	CheckFatal(err)
 
-		return
-	}
 	// err = cmd.Wait()
 	// if err != nil {
 	// 	fmt.Fprintln(os.Stderr, "s1 Wait:", err)
@@ -96,14 +89,10 @@ func secondpass(prompt, nprompt, model string, r int) {
 	passOne := "t1.tpl"
 	//tmpl, err := template.New(passOne).ParseFiles(passOne)
 	tmpl, err := template.New(passOne).Parse(t1)
-	if err != nil {
-		panic(err)
-	}
+	CheckFatal(err)
 
 	small, err := os.OpenFile("mn.py", os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		panic(err)
-	}
+	CheckFatal(err)
 	defer small.Close()
 
 	err = tmpl.Execute(small, sd)
@@ -114,10 +103,7 @@ func secondpass(prompt, nprompt, model string, r int) {
 
 	cmd = exec.Command("./installer_files/env/bin/python", "mn.py")
 	err = cmd.Run()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "s2 Start:", err)
-		return
-	}
+	CheckFatal(err)
 	// err = cmd.Wait()
 	// if err != nil {
 	// 	fmt.Fprintln(os.Stderr, "s2 Wait:", err)
@@ -128,15 +114,12 @@ func secondpass(prompt, nprompt, model string, r int) {
 }
 
 func runAllModels(prompt, nprompt string) {
-	r := time.Now().Nanosecond()
 
 	m, err := os.ReadFile("models.txt")
-	if err != nil {
-		panic(err)
-	}
+	CheckFatal(err)
 	mo := string(m)
 	models := strings.Split(mo, "\n")
-	r = time.Now().Nanosecond()
+	r := time.Now().Nanosecond()
 
 	for index, model := range models {
 
@@ -176,9 +159,7 @@ func main() {
 
 	timedir = "/mnt/nfs_clientshare/stable/" + time.Now().Format("2006-01-02-15-04-05")
 	err := os.MkdirAll(timedir, 0777)
-	if err != nil {
-		panic(err)
-	}
+	CheckFatal(err)
 
 	if modelcli == "" {
 		for i := 0; i < count; i++ {
@@ -188,9 +169,8 @@ func main() {
 	}
 
 	m, err := os.ReadFile("models.txt")
-	if err != nil {
-		panic(err)
-	}
+	CheckFatal(err)
+
 	mo := string(m)
 	models := strings.Split(mo, "\n")
 
