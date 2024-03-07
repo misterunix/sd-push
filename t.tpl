@@ -13,7 +13,7 @@ load_model(context, 'stable-diffusion')
 
 # generate the image
 
-images = generate_images(context, prompt='{{ .Prompt }}', negative_prompt='{{.NPrompt}}', seed={{.RandomNumber}}, width=768, height=512,num_inference_steps=16)
+images = generate_images(context, prompt='{{ .Prompt }}', negative_prompt='{{.NPrompt}}', seed={{.RandomNumber}}, width=512 , height=768,num_inference_steps=16)
 
 # save the image
 images[0].save("{{.SmallImage}}") # images is a list of PIL.Image
