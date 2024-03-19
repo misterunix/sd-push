@@ -18,6 +18,9 @@ var t string
 //go:embed t1.tpl
 var t1 string
 
+//go:embed models.txt
+var basemodels string
+
 var timedir string
 var tss string
 var cmd *exec.Cmd
@@ -29,9 +32,14 @@ type Stable struct {
 	Prompt       string
 	NPrompt      string
 	Model        string
+	Steps        int
+	Width        int
+	Height       int
 }
 
-func firstpass(prompt, nprompt, model string, r int) {
+var width, height int
+
+func firstpass(prompt, nprompt, model string, r int, thesteps int) {
 	os.Remove("mm.py")
 	os.Remove("mn.py")
 	fmt.Println("firstpass")
@@ -42,6 +50,9 @@ func firstpass(prompt, nprompt, model string, r int) {
 	sd.Prompt = prompt
 	sd.NPrompt = nprompt
 	sd.Model = model
+	sd.Steps = thesteps
+	sd.Width = width
+	sd.Height = height
 
 	jsonString, _ := json.Marshal(sd)
 	os.WriteFile(timedir+"/"+tss+".json", jsonString, os.ModePerm)
@@ -75,7 +86,7 @@ func firstpass(prompt, nprompt, model string, r int) {
 
 }
 
-func secondpass(prompt, nprompt, model string, r int) {
+func secondpass(prompt, nprompt, model string, r int, thesteps int) {
 	fmt.Println("secondpass")
 	sd := Stable{}
 	sd.RandomNumber = r
@@ -84,6 +95,9 @@ func secondpass(prompt, nprompt, model string, r int) {
 	sd.Prompt = prompt
 	sd.NPrompt = nprompt
 	sd.Model = model
+	sd.Steps = thesteps
+	sd.Width = width
+	sd.Height = height
 
 	// Create a new template and parse the letter into it.
 	passOne := "t1.tpl"
@@ -113,14 +127,18 @@ func secondpass(prompt, nprompt, model string, r int) {
 
 }
 
-func runAllModels(prompt, nprompt string) {
+func runAllModels(prompt, nprompt string, theseed int, thesteps int) {
 
 	m, err := os.ReadFile("models.txt")
 	CheckFatal(err)
 	mo := string(m)
 	models := strings.Split(mo, "\n")
-	r := time.Now().Nanosecond()
-
+	var r int
+	if theseed != 0 {
+		r = theseed
+	} else {
+		r = time.Now().Nanosecond()
+	}
 	for index, model := range models {
 
 		model = strings.TrimSpace(model)
@@ -131,9 +149,9 @@ func runAllModels(prompt, nprompt string) {
 
 		fmt.Println("index:", index, "tss:", tss, "model:", model)
 
-		firstpass(prompt, nprompt, model, r)
+		firstpass(prompt, nprompt, model, r, thesteps)
 
-		secondpass(prompt, nprompt, model, r)
+		secondpass(prompt, nprompt, model, r, thesteps)
 
 	}
 }
@@ -145,10 +163,16 @@ func main() {
 	var modelcli string
 	var r int
 	var count int
+	var theseed int
+	var thesteps int
 
 	flag.StringVar(&prompt, "prompt", "prompt", "prompt")
 	flag.StringVar(&nprompt, "nprompt", "nprompt", "nprompt")
 	flag.StringVar(&modelcli, "model", "", "model")
+	flag.IntVar(&theseed, "seed", 0, "seed")
+	flag.IntVar(&thesteps, "steps", 16, "steps")
+	flag.IntVar(&width, "width", 512, "width")
+	flag.IntVar(&height, "height", 768, "height")
 	flag.IntVar(&count, "count", 1, "count")
 
 	//flag.IntVar(&r, "r", 0, "random number")
@@ -163,16 +187,16 @@ func main() {
 
 	if modelcli == "" {
 		for i := 0; i < count; i++ {
-			runAllModels(prompt, nprompt)
+			runAllModels(prompt, nprompt, theseed, thesteps)
 		}
 		os.Exit(0)
 	}
 
-	m, err := os.ReadFile("models.txt")
-	CheckFatal(err)
+	//m, err := os.ReadFile("models.txt")
+	//CheckFatal(err)
 
-	mo := string(m)
-	models := strings.Split(mo, "\n")
+	//mo := string(m)
+	models := strings.Split(basemodels, "\n")
 
 	found := false
 	for _, model := range models {
@@ -194,12 +218,17 @@ func main() {
 
 	totalstart := time.Now()
 	for i := 0; i < count; i++ {
-		r = time.Now().Nanosecond()
+		if theseed != 0 {
+			r = theseed
+		} else {
+			r = time.Now().Nanosecond()
+		}
+		//r = time.Now().Nanosecond()
 		tss = fmt.Sprintf("%d", time.Now().Unix())
 		fmt.Println("i:", i, "tss:", tss, "modelcli:", modelcli)
 		start := time.Now()
-		firstpass(prompt, nprompt, modelcli, r)
-		secondpass(prompt, nprompt, modelcli, r)
+		firstpass(prompt, nprompt, modelcli, r, thesteps)
+		secondpass(prompt, nprompt, modelcli, r, thesteps)
 		fmt.Println("time:", time.Since(start).Minutes())
 	}
 	fmt.Println("total time:", time.Since(totalstart).Minutes())
