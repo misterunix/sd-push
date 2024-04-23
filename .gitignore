@@ -1,2 +1,4 @@
-/mm.py
-/sd-push
+/*.py
+/bin/*
+/trash/*    
+!*.md

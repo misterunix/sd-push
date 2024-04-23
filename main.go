@@ -12,14 +12,16 @@ import (
 	"time"
 )
 
-//go:embed t.tpl
+//go:embed templates/t.tpl
 var t string
 
-//go:embed t1.tpl
+//go:embed templates/t1.tpl
 var t1 string
 
-//go:embed models.txt
-var basemodels string
+//go:embed samplers.txt
+var samplers string
+
+var basemodels []string
 
 var timedir string
 var tss string
@@ -35,11 +37,12 @@ type Stable struct {
 	Steps        int
 	Width        int
 	Height       int
+	Sampler      string
 }
 
 var width, height int
 
-func firstpass(prompt, nprompt, model string, r int, thesteps int) {
+func firstpass(prompt, nprompt, model string, r int, thesteps int) error {
 	os.Remove("mm.py")
 	os.Remove("mn.py")
 	fmt.Println("firstpass")
@@ -53,7 +56,7 @@ func firstpass(prompt, nprompt, model string, r int, thesteps int) {
 	sd.Steps = thesteps
 	sd.Width = width
 	sd.Height = height
-
+	sd.Sampler = "dpmpp_2s_a"
 	jsonString, _ := json.Marshal(sd)
 	os.WriteFile(timedir+"/"+tss+".json", jsonString, os.ModePerm)
 
@@ -61,32 +64,46 @@ func firstpass(prompt, nprompt, model string, r int, thesteps int) {
 	passOne := "t.tpl"
 	// tmpl, err := template.New(passOne).ParseFiles(passOne)
 	tmpl, err := template.New(passOne).Parse(t)
-	CheckFatal(err)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "s1 Parse:", err)
+		return err
+	}
+	//CheckFatal(err)
 
 	small, err := os.OpenFile("mm.py", os.O_CREATE|os.O_WRONLY, 0644)
-	CheckFatal(err)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "s1 OpenFile:", err)
+		return err
+	}
+
+	//CheckFatal(err)
 
 	defer small.Close()
 
 	err = tmpl.Execute(small, sd)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "s1 Execute:", err)
-		return
+		return err
 	}
 
 	cmd = exec.Command("./installer_files/env/bin/python", "mm.py")
 	err = cmd.Run()
-	CheckFatal(err)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "s1 Run:", err)
+		return err
+	}
+
+	//CheckFatal(err)
 
 	// err = cmd.Wait()
 	// if err != nil {
 	// 	fmt.Fprintln(os.Stderr, "s1 Wait:", err)
 	// 	return
 	// }
-
+	return nil
 }
 
-func secondpass(prompt, nprompt, model string, r int, thesteps int) {
+func secondpass(prompt, nprompt, model string, r int, thesteps int) error {
 	fmt.Println("secondpass")
 	sd := Stable{}
 	sd.RandomNumber = r
@@ -103,55 +120,103 @@ func secondpass(prompt, nprompt, model string, r int, thesteps int) {
 	passOne := "t1.tpl"
 	//tmpl, err := template.New(passOne).ParseFiles(passOne)
 	tmpl, err := template.New(passOne).Parse(t1)
-	CheckFatal(err)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "s2 Parse:", err)
+		return err
+	}
 
 	small, err := os.OpenFile("mn.py", os.O_CREATE|os.O_WRONLY, 0644)
-	CheckFatal(err)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "s2 OpenFile:", err)
+		return err
+	}
+
 	defer small.Close()
 
 	err = tmpl.Execute(small, sd)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "s2 Execute:", err)
-		return
+		return err
 	}
 
 	cmd = exec.Command("./installer_files/env/bin/python", "mn.py")
 	err = cmd.Run()
-	CheckFatal(err)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "s2 Run:", err)
+		return err
+	}
 	// err = cmd.Wait()
 	// if err != nil {
 	// 	fmt.Fprintln(os.Stderr, "s2 Wait:", err)
 	// 	return
 	// }
 	os.Remove(sd.SmallImage)
+	return nil
+}
 
+// get all the models from the directory
+func LoadModels() error {
+	fmt.Println("LoadModels")
+	// get a list of models from a directory
+	dir, err := os.ReadDir("models/stable-diffusion")
+	if err != nil {
+		return err
+	}
+
+	//CheckFatal(err)
+	for _, file := range dir {
+		if file.IsDir() {
+			continue
+		}
+		if strings.HasSuffix(file.Name(), ".txt") {
+			continue
+		}
+		fmt.Println("file.Name():", file.Name())
+		basemodels = append(basemodels, file.Name())
+	}
+	//fmt.Println("basemodels:", len(basemodels))
+	if len(basemodels) == 0 {
+		return fmt.Errorf("no models found")
+	}
+	return nil
 }
 
 func runAllModels(prompt, nprompt string, theseed int, thesteps int) {
 
-	m, err := os.ReadFile("models.txt")
-	CheckFatal(err)
-	mo := string(m)
-	models := strings.Split(mo, "\n")
+	// m, err := os.ReadFile("models.txt")
+	// CheckFatal(err)
+	// mo := string(m)
+	// models := strings.Split(mo, "\n")
+
+	// LoadModels()
+
 	var r int
 	if theseed != 0 {
 		r = theseed
 	} else {
 		r = time.Now().Nanosecond()
 	}
-	for index, model := range models {
+	for index, model := range basemodels {
 
 		model = strings.TrimSpace(model)
-		if strings.HasPrefix(model, "#") {
-			continue
-		}
+		// if strings.HasPrefix(model, "#") {
+		// 	continue
+		// }
 		tss = fmt.Sprintf("%d", time.Now().Unix())
 
 		fmt.Println("index:", index, "tss:", tss, "model:", model)
 
-		firstpass(prompt, nprompt, model, r, thesteps)
+		err := firstpass(prompt, nprompt, model, r, thesteps)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "firstpass:", err)
+			continue
+		}
 
-		secondpass(prompt, nprompt, model, r, thesteps)
+		err = secondpass(prompt, nprompt, model, r, thesteps)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "secondpass:", err)
+			continue
+		}
 
 	}
 }
@@ -183,9 +248,21 @@ func main() {
 
 	timedir = "/mnt/nfs_clientshare/stable/" + time.Now().Format("2006-01-02-15-04-05")
 	err := os.MkdirAll(timedir, 0777)
-	CheckFatal(err)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "MkdirAll:", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Current folder:", timedir)
+
+	err = LoadModels()
+	if err != nil {
+		fmt.Println("LoadModels:", err)
+		os.Exit(1)
+	}
 
 	if modelcli == "" {
+		fmt.Println("Running all models")
 		for i := 0; i < count; i++ {
 			runAllModels(prompt, nprompt, theseed, thesteps)
 		}
@@ -196,15 +273,15 @@ func main() {
 	//CheckFatal(err)
 
 	//mo := string(m)
-	models := strings.Split(basemodels, "\n")
+	//models := strings.Split(basemodels, "\n")
 
 	found := false
-	for _, model := range models {
+	for _, model := range basemodels {
 		model = strings.TrimSpace(model)
 		fmt.Println("model:", model, "modelcli:", modelcli)
-		if strings.HasPrefix(model, "#") {
-			continue
-		}
+		// if strings.HasPrefix(model, "#") {
+		// 	continue
+		// }
 		if model == modelcli {
 			found = true
 			break

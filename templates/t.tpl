@@ -6,6 +6,7 @@ from sdkit.utils import log
 context = sdkit.Context()
 context.device: str = 'cpu'
 context.num_inference_steps: int = {{.Steps}}
+context.sampler: str = '{{.Sampler}}'
 
 # set the path to the model file on the disk (.ckpt or .safetensors file)
 context.model_paths['stable-diffusion'] = '/home/bjones/easy-diffusion/models/stable-diffusion/{{.Model}}'
