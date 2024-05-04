@@ -57,7 +57,8 @@ func firstpass(prompt, nprompt, model string, r int, thesteps int) error {
 	sd.Width = width
 	sd.Height = height
 	sd.Sampler = "dpmpp_2s_a"
-	jsonString, _ := json.Marshal(sd)
+	jsonString, _ := json.MarshalIndent(sd, " ", "  ")
+
 	os.WriteFile(timedir+"/"+tss+".json", jsonString, os.ModePerm)
 
 	// Create a new template and parse the letter into it.
@@ -150,7 +151,9 @@ func secondpass(prompt, nprompt, model string, r int, thesteps int) error {
 	// 	fmt.Fprintln(os.Stderr, "s2 Wait:", err)
 	// 	return
 	// }
-	os.Remove(sd.SmallImage)
+
+	//os.Remove(sd.SmallImage)
+
 	return nil
 }
 
