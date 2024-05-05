@@ -40,6 +40,21 @@ type Stable struct {
 	Sampler      string
 }
 
+type Startup struct {
+	RandomNumber   int
+	Prompt         string
+	NPrompt        string
+	ModelsLocation string
+	Model          string
+	LoraLocation   string
+	Steps          int
+	Width          int
+	Height         int
+	ScaleUp        bool
+	RemoveSmall    bool
+	Sampler        string
+}
+
 var width, height int
 
 func firstpass(prompt, nprompt, model string, r int, thesteps int) error {
@@ -233,6 +248,7 @@ func main() {
 	var count int
 	var theseed int
 	var thesteps int
+	var createstartjson bool
 
 	flag.StringVar(&prompt, "prompt", "prompt", "prompt")
 	flag.StringVar(&nprompt, "nprompt", "nprompt", "nprompt")
@@ -242,9 +258,32 @@ func main() {
 	flag.IntVar(&width, "width", 512, "width")
 	flag.IntVar(&height, "height", 768, "height")
 	flag.IntVar(&count, "count", 1, "count")
-
+	flag.BoolVar(&createstartjson, "cj", false, "create start json")
 	//flag.IntVar(&r, "r", 0, "random number")
 	flag.Parse()
+
+	if createstartjson {
+		sd := Startup{}
+		sd.RandomNumber = 0
+		sd.Prompt = prompt
+		sd.NPrompt = nprompt
+		sd.ModelsLocation = "models/stable-diffusion"
+		sd.Model = ""
+		sd.LoraLocation = "models/lora"
+		sd.Steps = 16
+		sd.Width = 768
+		sd.Height = 512
+		sd.ScaleUp = true
+		sd.RemoveSmall = true
+		sd.Sampler = ""
+		jsonString, _ := json.MarshalIndent(sd, " ", "  ")
+		err := os.WriteFile("start.json", jsonString, os.ModePerm)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "WriteFile:", err)
+			os.Exit(1)
+		}
+		os.Exit(0)
+	}
 
 	os.Remove("mm.py")
 	os.Remove("mn.py")
