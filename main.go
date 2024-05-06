@@ -19,43 +19,7 @@ var t string
 var t1 string
 
 //go:embed samplers.txt
-var samplers string
-
-var basemodels []string
-
-var timedir string
-var tss string
-var cmd *exec.Cmd
-
-type Stable struct {
-	RandomNumber int
-	SmallImage   string
-	LargeImage   string
-	Prompt       string
-	NPrompt      string
-	Model        string
-	Steps        int
-	Width        int
-	Height       int
-	Sampler      string
-}
-
-type Startup struct {
-	RandomNumber   int
-	Prompt         string
-	NPrompt        string
-	ModelsLocation string
-	Model          string
-	LoraLocation   string
-	Steps          int
-	Width          int
-	Height         int
-	ScaleUp        bool
-	RemoveSmall    bool
-	Sampler        string
-}
-
-var width, height int
+var samplersfile string
 
 func firstpass(prompt, nprompt, model string, r int, thesteps int) error {
 	os.Remove("mm.py")
@@ -249,6 +213,7 @@ func main() {
 	var theseed int
 	var thesteps int
 	var createstartjson bool
+	var samplers []string
 
 	flag.StringVar(&prompt, "prompt", "prompt", "prompt")
 	flag.StringVar(&nprompt, "nprompt", "nprompt", "nprompt")
@@ -285,11 +250,30 @@ func main() {
 		os.Exit(0)
 	}
 
+	// check if start.json exists
+	_, err := os.Stat("start.json")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "start.json does not exist")
+		os.Exit(1)
+	}
+
+	params := Startup{}
+	data, err := os.ReadFile("start.json")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "ReadFile:", err)
+		os.Exit(1)
+	}
+	err = json.Unmarshal(data, &params)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Unmarshal:", err)
+		os.Exit(1)
+	}
+
 	os.Remove("mm.py")
 	os.Remove("mn.py")
 
 	timedir = "/mnt/nfs_clientshare/stable/" + time.Now().Format("2006-01-02-15-04-05")
-	err := os.MkdirAll(timedir, 0777)
+	err = os.MkdirAll(timedir, 0777)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "MkdirAll:", err)
 		os.Exit(1)
@@ -301,6 +285,15 @@ func main() {
 	if err != nil {
 		fmt.Println("LoadModels:", err)
 		os.Exit(1)
+	}
+
+	s := strings.Split(samplersfile, "\n")
+	for _, v := range s {
+		v = strings.TrimSpace(v)
+		if v == "" {
+			continue
+		}
+		samplers = append(samplers, v)
 	}
 
 	if modelcli == "" {
