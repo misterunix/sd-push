@@ -131,7 +131,7 @@ func secondpass(prompt, nprompt, model string, r int, thesteps int) error {
 	// 	return
 	// }
 
-	//os.Remove(sd.SmallImage)
+	os.Remove(sd.SmallImage)
 
 	return nil
 }
