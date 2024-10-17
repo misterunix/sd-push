@@ -6,5 +6,5 @@ env GOOS=linux GOARCH=amd64 go build -o bin/sd-push-linux-amd64
 #env GOOS=netbsd GOARCH=arm64 go build -o bin/sd-push-netbsd-arm64
 #env GOOS=openbsd GOARCH=amd64 go build -o bin/sd-push-openbsd-amd64
 #env GOOS=openbsd GOARCH=arm64 go build -o bin/sd-push-openbsd-arm64
-
+cp bin/sd-push-linux-amd64 ~/bin/sd-push
 
