@@ -153,7 +153,7 @@ func LoadModels() error {
 		if strings.HasSuffix(file.Name(), ".txt") {
 			continue
 		}
-		fmt.Println("file.Name():", file.Name())
+		fmt.Println("file.Name(): ", file.Name())
 		basemodels = append(basemodels, file.Name())
 	}
 	//fmt.Println("basemodels:", len(basemodels))
@@ -272,14 +272,30 @@ func main() {
 	os.Remove("mm.py")
 	os.Remove("mn.py")
 
-	timedir = "/mnt/nfs_clientshare/stable/" + time.Now().Format("2006-01-02-15-04-05")
-	err = os.MkdirAll(timedir, 0777)
+	// check if the models directory exists
+
+	var userdir string
+	userdir, err = os.UserHomeDir()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "UserHomeDir:", err)
+		os.Exit(1)
+	}
+	userdir += "/webserver/"
+
+	err = os.MkdirAll(userdir, 0755)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "MkdirAll:", err)
 		os.Exit(1)
 	}
 
-	fmt.Println("Current folder:", timedir)
+	//timedir = "/mnt/nfs_clientshare/stable/" + time.Now().Format("2006-01-02-15-04-05")
+	// err = os.MkdirAll(timedir, 0777)
+	// if err != nil {
+	// 	fmt.Fprintln(os.Stderr, "MkdirAll:", err)
+	// 	os.Exit(1)
+	// }
+
+	fmt.Println("Current folder:", userdir)
 
 	err = LoadModels()
 	if err != nil {
@@ -313,7 +329,7 @@ func main() {
 	found := false
 	for _, model := range basemodels {
 		model = strings.TrimSpace(model)
-		fmt.Println("model:", model, "modelcli:", modelcli)
+		fmt.Println("model: ", model, " modelcli: ", modelcli)
 		// if strings.HasPrefix(model, "#") {
 		// 	continue
 		// }
