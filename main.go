@@ -27,8 +27,8 @@ func firstpass(prompt, nprompt, model string, r int, thesteps int) error {
 	fmt.Println("firstpass")
 	sd := Stable{}
 	sd.RandomNumber = r
-	sd.SmallImage = timedir + "/" + tss + "-" + "small.jpg"
-	sd.LargeImage = timedir + "/" + tss + "-" + "large.jpg"
+	sd.SmallImage = userdir + "/" + tss + "-" + "small.jpg"
+	sd.LargeImage = userdir + "/" + tss + "-" + "large.jpg"
 	sd.Prompt = prompt
 	sd.NPrompt = nprompt
 	sd.Model = model
@@ -38,7 +38,7 @@ func firstpass(prompt, nprompt, model string, r int, thesteps int) error {
 	sd.Sampler = "dpmpp_2s_a"
 	jsonString, _ := json.MarshalIndent(sd, " ", "  ")
 
-	os.WriteFile(timedir+"/"+tss+".json", jsonString, os.ModePerm)
+	os.WriteFile(userdir+"/"+tss+".json", jsonString, os.ModePerm)
 
 	// Create a new template and parse the letter into it.
 	passOne := "t.tpl"
@@ -87,8 +87,8 @@ func secondpass(prompt, nprompt, model string, r int, thesteps int) error {
 	fmt.Println("secondpass")
 	sd := Stable{}
 	sd.RandomNumber = r
-	sd.SmallImage = timedir + "/" + tss + "-" + "small.jpg"
-	sd.LargeImage = timedir + "/" + tss + "-" + "large.jpg"
+	sd.SmallImage = userdir + "/" + tss + "-" + "small.jpg"
+	sd.LargeImage = userdir + "/" + tss + "-" + "large.jpg"
 	sd.Prompt = prompt
 	sd.NPrompt = nprompt
 	sd.Model = model
@@ -274,7 +274,7 @@ func main() {
 
 	// check if the models directory exists
 
-	var userdir string
+	//var userdir string
 	userdir, err = os.UserHomeDir()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "UserHomeDir:", err)
