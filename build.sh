@@ -8,3 +8,5 @@ env GOOS=linux GOARCH=amd64 go build -o bin/sd-push-linux-amd64
 #env GOOS=openbsd GOARCH=arm64 go build -o bin/sd-push-openbsd-arm64
 cp bin/sd-push-linux-amd64 ~/bin/sd-push
 
+scp bin/sd-push-linux-amd64 bjones@10.0.0.205:/home/bjones/
+
