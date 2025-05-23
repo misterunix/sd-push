@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"strings"
 	"text/template"
 	"time"
@@ -221,7 +222,7 @@ func main() {
 	flag.IntVar(&theseed, "seed", 0, "seed")
 	flag.IntVar(&thesteps, "steps", 16, "steps")
 	flag.IntVar(&width, "width", 512, "width")
-	flag.IntVar(&height, "height", 768, "height")
+	flag.IntVar(&height, "height", 512, "height")
 	flag.IntVar(&count, "count", 1, "count")
 	flag.BoolVar(&createstartjson, "cj", false, "create start json")
 	//flag.IntVar(&r, "r", 0, "random number")
@@ -236,7 +237,7 @@ func main() {
 		sd.Model = ""
 		sd.LoraLocation = "models/lora"
 		sd.Steps = 16
-		sd.Width = 768
+		sd.Width = 512
 		sd.Height = 512
 		sd.ScaleUp = true
 		sd.RemoveSmall = true
@@ -280,9 +281,13 @@ func main() {
 		fmt.Fprintln(os.Stderr, "UserHomeDir:", err)
 		os.Exit(1)
 	}
-	userdir += "/webserver/"
+	webserverDir := "/webserver/"
 
-	err = os.MkdirAll(userdir, 0755)
+	serverPath := path.Join(userdir, webserverDir)
+
+fmt.Println(userdir,webserverDir,serverPath)
+
+	err = os.MkdirAll(serverPath, 0755)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "MkdirAll:", err)
 		os.Exit(1)
