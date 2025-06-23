@@ -28,8 +28,8 @@ func firstpass(prompt, nprompt, model string, r int, thesteps int) error {
 	fmt.Println("firstpass")
 	sd := Stable{}
 	sd.RandomNumber = r
-	sd.SmallImage = userdir + "/" + tss + "-" + "small.jpg"
-	sd.LargeImage = userdir + "/" + tss + "-" + "large.jpg"
+	sd.SmallImage = userdir + "/" + tss + "-" + "small.png"
+	sd.LargeImage = userdir + "/" + tss + "-" + "large.png"
 	sd.Prompt = prompt
 	sd.NPrompt = nprompt
 	sd.Model = model
@@ -88,8 +88,8 @@ func secondpass(prompt, nprompt, model string, r int, thesteps int) error {
 	fmt.Println("secondpass")
 	sd := Stable{}
 	sd.RandomNumber = r
-	sd.SmallImage = userdir + "/" + tss + "-" + "small.jpg"
-	sd.LargeImage = userdir + "/" + tss + "-" + "large.jpg"
+	sd.SmallImage = userdir + "/" + tss + "-" + "small.png"
+	sd.LargeImage = userdir + "/" + tss + "-" + "large.png"
 	sd.Prompt = prompt
 	sd.NPrompt = nprompt
 	sd.Model = model
@@ -204,6 +204,7 @@ func runAllModels(prompt, nprompt string, theseed int, thesteps int) {
 	}
 }
 
+// Main function
 func main() {
 
 	var prompt string
@@ -236,7 +237,7 @@ func main() {
 		sd.ModelsLocation = "models/stable-diffusion"
 		sd.Model = ""
 		sd.LoraLocation = "models/lora"
-		sd.Steps = 16
+		sd.Steps = 50
 		sd.Width = 512
 		sd.Height = 512
 		sd.ScaleUp = true
@@ -252,23 +253,23 @@ func main() {
 	}
 
 	// check if start.json exists
-	_, err := os.Stat("start.json")
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "start.json does not exist")
-		os.Exit(1)
-	}
+	// _, err := os.Stat("start.json")
+	// if err != nil {
+	// 	fmt.Fprintln(os.Stderr, "start.json does not exist")
+	// 	os.Exit(1)
+	// }
 
-	params := Startup{}
-	data, err := os.ReadFile("start.json")
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "ReadFile:", err)
-		os.Exit(1)
-	}
-	err = json.Unmarshal(data, &params)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Unmarshal:", err)
-		os.Exit(1)
-	}
+	// params := Startup{}
+	// data, err := os.ReadFile("start.json")
+	// if err != nil {
+	// 	fmt.Fprintln(os.Stderr, "ReadFile:", err)
+	// 	os.Exit(1)
+	// }
+	// err = json.Unmarshal(data, &params)
+	// if err != nil {
+	// 	fmt.Fprintln(os.Stderr, "Unmarshal:", err)
+	// 	os.Exit(1)
+	// }
 
 	os.Remove("mm.py")
 	os.Remove("mn.py")
@@ -276,16 +277,18 @@ func main() {
 	// check if the models directory exists
 
 	//var userdir string
-	userdir, err = os.UserHomeDir()
+	userdir, err := os.UserHomeDir()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "UserHomeDir:", err)
 		os.Exit(1)
 	}
-	webserverDir := "/webserver/"
+	webserverDir := "/images/"
 
 	serverPath := path.Join(userdir, webserverDir)
 
-fmt.Println(userdir,webserverDir,serverPath)
+	fmt.Println(userdir, webserverDir, serverPath)
+
+	userdir = serverPath // quick fix - remove later
 
 	err = os.MkdirAll(serverPath, 0755)
 	if err != nil {
