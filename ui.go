@@ -16,30 +16,30 @@ var models []string
 func getmodels() []string {
 	fp := "models/stable-diffusion/"
 
-
-
-	
-entries, err := os.ReadDir(fp)
+	entries, err := os.ReadDir(fp)
 	if err != nil {
 		log.Fatalf("Error reading directory: %v", err)
 	}
 
-	fmt.Printf("Files and directories in %s:\n", dirPath)
+	fmt.Printf("Files and directories in %s:\n", fp)
 	for _, entry := range entries {
-		fmt.Println
+		//fmt.Println
 		if strings.HasSuffix(entry.Name(), ".safetensors") {
 			models = append(models, entry.Name())
 		}
 	}
 
+	for _, model := range models {
+		fmt.Println(model)
+	}
+	return models
 }
 
 func BuildUI() {
-app = tview.NewApplication()
+	app = tview.NewApplication()
 
-list1 := tview.NewList().
-	AddItem("All Models","",'a',nil).
-	AddItem("First Pass","",'f',nil).
-
+	// list1 := tview.NewList().
+	// 	AddItem("All Models","",'a',nil).
+	// 	AddItem("First Pass","",'f',nil)
 
 }

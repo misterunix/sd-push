@@ -207,6 +207,8 @@ func runAllModels(prompt, nprompt string, theseed int, thesteps int) {
 // Main function
 func main() {
 
+	getmodels()
+	os.Exit(0)
 	var prompt string
 	var nprompt string
 	var modelcli string
