@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"sd-push/internal/common"
 	"strings"
 	"text/template"
 	"time"
@@ -19,27 +20,27 @@ var t string
 //go:embed templates/t1.tpl
 var t1 string
 
-//go:embed samplers.txt
-var samplersfile string
+//go:embed templates/samplers.txt
+var SamplersFile string
 
 func firstpass(prompt, nprompt, model string, r int, thesteps int) error {
 	os.Remove("mm.py")
 	os.Remove("mn.py")
 	fmt.Println("firstpass")
-	sd := Stable{}
+	sd := common.Stable{}
 	sd.RandomNumber = r
-	sd.SmallImage = userdir + "/" + tss + "-" + "small.png"
-	sd.LargeImage = userdir + "/" + tss + "-" + "large.png"
+	sd.SmallImage = common.UserDir + "/" + common.Tss + "-" + "small.png"
+	sd.LargeImage = common.UserDir + "/" + common.Tss + "-" + "large.png"
 	sd.Prompt = prompt
 	sd.NPrompt = nprompt
 	sd.Model = model
 	sd.Steps = thesteps
-	sd.Width = width
-	sd.Height = height
+	sd.Width = common.Width
+	sd.Height = common.Height
 	sd.Sampler = "dpmpp_2s_a"
 	jsonString, _ := json.MarshalIndent(sd, " ", "  ")
 
-	os.WriteFile(userdir+"/"+tss+".json", jsonString, os.ModePerm)
+	os.WriteFile(common.UserDir+"/"+common.Tss+".json", jsonString, os.ModePerm)
 
 	// Create a new template and parse the letter into it.
 	passOne := "t.tpl"
@@ -67,8 +68,8 @@ func firstpass(prompt, nprompt, model string, r int, thesteps int) error {
 		return err
 	}
 
-	cmd = exec.Command("./installer_files/env/bin/python", "mm.py")
-	err = cmd.Run()
+	common.Cmd = exec.Command("./installer_files/env/bin/python", "mm.py")
+	err = common.Cmd.Run()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "s1 Run:", err)
 		return err
@@ -86,16 +87,16 @@ func firstpass(prompt, nprompt, model string, r int, thesteps int) error {
 
 func secondpass(prompt, nprompt, model string, r int, thesteps int) error {
 	fmt.Println("secondpass")
-	sd := Stable{}
+	sd := common.Stable{}
 	sd.RandomNumber = r
-	sd.SmallImage = userdir + "/" + tss + "-" + "small.png"
-	sd.LargeImage = userdir + "/" + tss + "-" + "large.png"
+	sd.SmallImage = common.UserDir + "/" + common.Tss + "-" + "small.png"
+	sd.LargeImage = common.UserDir + "/" + common.Tss + "-" + "large.png"
 	sd.Prompt = prompt
 	sd.NPrompt = nprompt
 	sd.Model = model
 	sd.Steps = thesteps
-	sd.Width = width
-	sd.Height = height
+	sd.Width = common.Width
+	sd.Height = common.Height
 
 	// Create a new template and parse the letter into it.
 	passOne := "t1.tpl"
@@ -120,8 +121,8 @@ func secondpass(prompt, nprompt, model string, r int, thesteps int) error {
 		return err
 	}
 
-	cmd = exec.Command("./installer_files/env/bin/python", "mn.py")
-	err = cmd.Run()
+	common.Cmd = exec.Command("./installer_files/env/bin/python", "mn.py")
+	err = common.Cmd.Run()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "s2 Run:", err)
 		return err
@@ -139,14 +140,14 @@ func secondpass(prompt, nprompt, model string, r int, thesteps int) error {
 
 // get all the models from the directory
 func LoadModels() error {
-	fmt.Println("LoadModels")
+	fmt.Println("Loading Models")
+
 	// get a list of models from a directory
 	dir, err := os.ReadDir("models/stable-diffusion")
 	if err != nil {
 		return err
 	}
 
-	//CheckFatal(err)
 	for _, file := range dir {
 		if file.IsDir() {
 			continue
@@ -154,11 +155,13 @@ func LoadModels() error {
 		if strings.HasSuffix(file.Name(), ".txt") {
 			continue
 		}
-		fmt.Println("file.Name(): ", file.Name())
-		basemodels = append(basemodels, file.Name())
+		if strings.HasSuffix(file.Name(), ".safetensors") {
+			fmt.Println("Model Name(): ", file.Name())
+			common.BaseModels = append(common.BaseModels, file.Name())
+		}
 	}
 	//fmt.Println("basemodels:", len(basemodels))
-	if len(basemodels) == 0 {
+	if len(common.BaseModels) == 0 {
 		return fmt.Errorf("no models found")
 	}
 	return nil
@@ -171,7 +174,11 @@ func runAllModels(prompt, nprompt string, theseed int, thesteps int) {
 	// mo := string(m)
 	// models := strings.Split(mo, "\n")
 
-	// LoadModels()
+	err := LoadModels()
+	if err != nil {
+		fmt.Println("LoadModels:", err)
+		os.Exit(1)
+	}
 
 	var r int
 	if theseed != 0 {
@@ -179,15 +186,18 @@ func runAllModels(prompt, nprompt string, theseed int, thesteps int) {
 	} else {
 		r = time.Now().Nanosecond()
 	}
-	for index, model := range basemodels {
+
+	for index, model := range common.BaseModels {
+
+		fmt.Println("index:", index, "model:", model)
 
 		model = strings.TrimSpace(model)
 		// if strings.HasPrefix(model, "#") {
 		// 	continue
 		// }
-		tss = fmt.Sprintf("%d", time.Now().Unix())
+		common.Tss = fmt.Sprintf("%d", time.Now().Unix())
 
-		fmt.Println("index:", index, "tss:", tss, "model:", model)
+		fmt.Println("index:", index, "tss:", common.Tss, "model:", model)
 
 		err := firstpass(prompt, nprompt, model, r, thesteps)
 		if err != nil {
@@ -207,30 +217,31 @@ func runAllModels(prompt, nprompt string, theseed int, thesteps int) {
 // Main function
 func main() {
 
+	//getmodels()
+	//os.Exit(0)
 	var prompt string
 	var nprompt string
-	var modelcli string
+	//var modelcli string
 	var r int
-	var count int
+	//var count int
 	var theseed int
 	var thesteps int
 	var createstartjson bool
-	var samplers []string
 
-	flag.StringVar(&prompt, "prompt", "prompt", "prompt")
-	flag.StringVar(&nprompt, "nprompt", "nprompt", "nprompt")
-	flag.StringVar(&modelcli, "model", "", "model")
-	flag.IntVar(&theseed, "seed", 0, "seed")
-	flag.IntVar(&thesteps, "steps", 16, "steps")
-	flag.IntVar(&width, "width", 512, "width")
-	flag.IntVar(&height, "height", 512, "height")
-	flag.IntVar(&count, "count", 1, "count")
+	// flag.StringVar(&prompt, "prompt", "prompt", "prompt")
+	// flag.StringVar(&nprompt, "nprompt", "nprompt", "nprompt")
+	// flag.StringVar(&modelcli, "model", "", "model")
+	// flag.IntVar(&theseed, "seed", 0, "seed")
+	// flag.IntVar(&thesteps, "steps", 16, "steps")
+	// flag.IntVar(&width, "width", 512, "width")
+	// flag.IntVar(&height, "height", 512, "height")
+	// flag.IntVar(&count, "count", 1, "count")
 	flag.BoolVar(&createstartjson, "cj", false, "create start json")
 	//flag.IntVar(&r, "r", 0, "random number")
 	flag.Parse()
 
 	if createstartjson {
-		sd := Startup{}
+		sd := common.Startup{}
 		sd.RandomNumber = 0
 		sd.Prompt = prompt
 		sd.NPrompt = nprompt
@@ -243,6 +254,7 @@ func main() {
 		sd.ScaleUp = true
 		sd.RemoveSmall = true
 		sd.Sampler = ""
+		sd.Count = 1
 		jsonString, _ := json.MarshalIndent(sd, " ", "  ")
 		err := os.WriteFile("start.json", jsonString, os.ModePerm)
 		if err != nil {
@@ -253,23 +265,23 @@ func main() {
 	}
 
 	// check if start.json exists
-	// _, err := os.Stat("start.json")
-	// if err != nil {
-	// 	fmt.Fprintln(os.Stderr, "start.json does not exist")
-	// 	os.Exit(1)
-	// }
+	_, err := os.Stat("start.json")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "start.json does not exist")
+		os.Exit(1)
+	}
 
-	// params := Startup{}
-	// data, err := os.ReadFile("start.json")
-	// if err != nil {
-	// 	fmt.Fprintln(os.Stderr, "ReadFile:", err)
-	// 	os.Exit(1)
-	// }
-	// err = json.Unmarshal(data, &params)
-	// if err != nil {
-	// 	fmt.Fprintln(os.Stderr, "Unmarshal:", err)
-	// 	os.Exit(1)
-	// }
+	params := common.Startup{}
+	data, err := os.ReadFile("start.json")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "ReadFile:", err)
+		os.Exit(1)
+	}
+	err = json.Unmarshal(data, &params)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Unmarshal:", err)
+		os.Exit(1)
+	}
 
 	os.Remove("mm.py")
 	os.Remove("mn.py")
@@ -311,22 +323,25 @@ func main() {
 		os.Exit(1)
 	}
 
-	s := strings.Split(samplersfile, "\n")
-	for _, v := range s {
-		v = strings.TrimSpace(v)
-		if v == "" {
-			continue
+	s := strings.Split(SamplersFile, "\n")
+	common.Samplers = s
+	/*
+		for _, v := range s {
+			v = strings.TrimSpace(v)
+			if v == "" {
+				continue
+			}
+			samplers = append(samplers, v)
 		}
-		samplers = append(samplers, v)
-	}
+	*/
 
-	if modelcli == "" {
-		fmt.Println("Running all models")
-		for i := 0; i < count; i++ {
-			runAllModels(prompt, nprompt, theseed, thesteps)
-		}
-		os.Exit(0)
-	}
+	// if modelcli == "" {
+	// 	fmt.Println("Running all models")
+	// 	for i := 0; i < count; i++ {
+	// 		runAllModels(prompt, nprompt, theseed, thesteps)
+	// 	}
+	// 	os.Exit(0)
+	// }
 
 	//m, err := os.ReadFile("models.txt")
 	//CheckFatal(err)
@@ -334,38 +349,51 @@ func main() {
 	//mo := string(m)
 	//models := strings.Split(basemodels, "\n")
 
-	found := false
-	for _, model := range basemodels {
-		model = strings.TrimSpace(model)
-		fmt.Println("model: ", model, " modelcli: ", modelcli)
-		// if strings.HasPrefix(model, "#") {
-		// 	continue
-		// }
-		if model == modelcli {
-			found = true
-			break
-		}
-	}
+	//found := false
+	/*
+		for _, model := range common.BaseModels {
+			model = strings.TrimSpace(model)
+			fmt.Println("model: ", model, " modelcli: ", modelcli)
+			// if strings.HasPrefix(model, "#") {
+			// 	continue
+			// }
 
-	if !found {
-		fmt.Println("model not found")
-		os.Exit(1)
-	}
-
-	totalstart := time.Now()
-	for i := 0; i < count; i++ {
-		if theseed != 0 {
-			r = theseed
-		} else {
-			r = time.Now().Nanosecond()
+			// if model == modelcli {
+			// 	found = true
+			// 	break
+			// }
 		}
-		//r = time.Now().Nanosecond()
-		tss = fmt.Sprintf("%d", time.Now().Unix())
-		fmt.Println("i:", i, "tss:", tss, "modelcli:", modelcli)
-		start := time.Now()
-		firstpass(prompt, nprompt, modelcli, r, thesteps)
-		secondpass(prompt, nprompt, modelcli, r, thesteps)
-		fmt.Println("time:", time.Since(start).Minutes())
+	*/
+
+	// if !found {
+	// 	fmt.Println("model not found")
+	// 	os.Exit(1)
+	// }
+
+	for _, modeltorun := range common.BaseModels {
+
+		fmt.Println("modeltorun:", modeltorun)
+
+		totalstart := time.Now()
+
+		for i := 0; i < params.Count; i++ {
+
+			fmt.Println("count:", i)
+
+			if theseed != 0 {
+				r = theseed
+			} else {
+				r = time.Now().Nanosecond()
+			}
+
+			//r = time.Now().Nanosecond()
+			common.Tss = fmt.Sprintf("%d", time.Now().Unix())
+			fmt.Println("i:", i, "tss:", common.Tss, "modelcli:", modeltorun)
+			start := time.Now()
+			firstpass(prompt, nprompt, modeltorun, r, thesteps)
+			secondpass(prompt, nprompt, modeltorun, r, thesteps)
+			fmt.Println("time:", time.Since(start).Minutes())
+		}
+		fmt.Println("total time:", time.Since(totalstart).Minutes())
 	}
-	fmt.Println("total time:", time.Since(totalstart).Minutes())
 }
