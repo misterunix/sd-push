@@ -2,7 +2,7 @@ package main
 
 import "os/exec"
 
-var basemodels []string
+var basemodels []string // List of models in the directory
 
 // var timedir string
 var tss string
