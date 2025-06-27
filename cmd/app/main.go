@@ -225,7 +225,7 @@ func main() {
 	var r int
 	//var count int
 	var theseed int
-	var thesteps int
+	//var thesteps int
 	var createstartjson bool
 
 	// flag.StringVar(&prompt, "prompt", "prompt", "prompt")
@@ -271,6 +271,9 @@ func main() {
 		os.Exit(1)
 	}
 
+	common.Width = 512
+	common.Height = 512
+
 	params := common.Startup{}
 	data, err := os.ReadFile("start.json")
 	if err != nil {
@@ -291,18 +294,18 @@ func main() {
 	// check if the models directory exists
 
 	//var userdir string
-	userdir, err := os.UserHomeDir()
+	common.UserDir, err = os.UserHomeDir()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "UserHomeDir:", err)
 		os.Exit(1)
 	}
 	webserverDir := "/images/"
 
-	serverPath := path.Join(userdir, webserverDir)
+	serverPath := path.Join(common.UserDir, webserverDir)
 
-	fmt.Println(userdir, webserverDir, serverPath)
+	fmt.Println(common.UserDir, webserverDir, serverPath)
 
-	userdir = serverPath // quick fix - remove later
+	common.UserDir = serverPath // quick fix - remove later
 
 	err = os.MkdirAll(serverPath, 0755)
 	if err != nil {
@@ -317,7 +320,7 @@ func main() {
 	// 	os.Exit(1)
 	// }
 
-	fmt.Println("Current folder:", userdir)
+	fmt.Println("Current folder:", common.UserDir)
 
 	err = LoadModels()
 	if err != nil {
@@ -392,8 +395,8 @@ func main() {
 			common.Tss = fmt.Sprintf("%d", time.Now().Unix())
 			fmt.Println("i:", i, "tss:", common.Tss, "modelcli:", modeltorun)
 			start := time.Now()
-			firstpass(prompt, nprompt, modeltorun, r, thesteps)
-			secondpass(prompt, nprompt, modeltorun, r, thesteps)
+			firstpass(params.Prompt, params.NPrompt, modeltorun, r, params.Steps)
+			secondpass(params.NPrompt, params.NPrompt, modeltorun, r, params.Steps)
 			fmt.Println("time:", time.Since(start).Minutes())
 		}
 		fmt.Println("total time:", time.Since(totalstart).Minutes())
