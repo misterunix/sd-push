@@ -283,6 +283,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	fmt.Println(params)
+
 	os.Remove("mm.py")
 	os.Remove("mn.py")
 
