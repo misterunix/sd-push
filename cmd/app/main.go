@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"math/rand/v2"
 	"os"
 	"os/exec"
 	"path"
@@ -236,7 +237,7 @@ func main() {
 	// flag.IntVar(&width, "width", 512, "width")
 	// flag.IntVar(&height, "height", 512, "height")
 	// flag.IntVar(&count, "count", 1, "count")
-	flag.BoolVar(&createstartjson, "cj", false, "create start json")
+	flag.BoolVar(&createstartjson, "cj", false, "create sd-push-run.json")
 	//flag.IntVar(&r, "r", 0, "random number")
 	flag.Parse()
 
@@ -256,7 +257,7 @@ func main() {
 		sd.Sampler = ""
 		sd.Count = 1
 		jsonString, _ := json.MarshalIndent(sd, " ", "  ")
-		err := os.WriteFile("start.json", jsonString, os.ModePerm)
+		err := os.WriteFile("sd-push-run.json", jsonString, os.ModePerm)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "WriteFile:", err)
 			os.Exit(1)
@@ -264,10 +265,10 @@ func main() {
 		os.Exit(0)
 	}
 
-	// check if start.json exists
-	_, err := os.Stat("start.json")
+	// check if sd-push-run exists
+	_, err := os.Stat("sd-push-run.json")
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "start.json does not exist")
+		fmt.Fprintln(os.Stderr, "sd-push-run.json does not exist")
 		os.Exit(1)
 	}
 
@@ -275,7 +276,7 @@ func main() {
 	common.Height = 512
 
 	params := common.Startup{}
-	data, err := os.ReadFile("start.json")
+	data, err := os.ReadFile("sd-push-run.json")
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "ReadFile:", err)
 		os.Exit(1)
@@ -375,6 +376,21 @@ func main() {
 	// 	os.Exit(1)
 	// }
 
+	params.Prompt = strings.ReplaceAll(params.Prompt, "\n", " ")
+	params.NPrompt = strings.ReplaceAll(params.NPrompt, "\n", " ")
+
+	params.Prompt = strings.ReplaceAll(params.Prompt, "'", "\\'")
+	params.NPrompt = strings.ReplaceAll(params.NPrompt, "'", "\\'")
+
+	params.Prompt = strings.ReplaceAll(params.Prompt, "\"", "\\\"")
+	params.NPrompt = strings.ReplaceAll(params.NPrompt, "\"", "\\\"")
+
+	if params.Sampler == "" {
+		params.Sampler = common.Samplers[rand.IntN(len(common.Samplers))]
+	}
+
+	//for _, common.RunThisSampler = range common.Samplers {
+
 	for _, modeltorun := range common.BaseModels {
 
 		fmt.Println("modeltorun:", modeltorun)
@@ -401,4 +417,5 @@ func main() {
 		}
 		fmt.Println("total time:", time.Since(totalstart).Minutes())
 	}
+
 }
