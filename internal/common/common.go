@@ -34,7 +34,7 @@ type Stable struct {
 	Width          int
 	Height         int
 	Sampler        string
-	Seed           int      // Random seed for image generation
+	Seed           int      // seed for image generation
 	ModelsLocation string   // Directory where models are stored
 	LoraLocation   string   // Directory where LoRA models are stored
 	UserHome       string   // User's home directory

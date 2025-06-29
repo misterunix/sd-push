@@ -86,11 +86,8 @@ func runAllModels(sd *common.Stable) {
 		os.Exit(1)
 	}
 
-	var r int
-	if sd.Seed != 0 {
-		r = sd.Seed
-	} else {
-		r = time.Now().Nanosecond()
+	if sd.Seed == 0 {
+		sd.Seed = time.Now().Nanosecond()
 	}
 
 	for index, model := range common.BaseModels {
