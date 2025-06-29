@@ -8,8 +8,9 @@ import (
 	"math/rand/v2"
 	"os"
 	"path"
-	pass1 "sd-push/internal"
 	"sd-push/internal/common"
+	"sd-push/internal/pass1"
+	"sd-push/internal/pass2"
 	"strings"
 	"time"
 )
@@ -103,14 +104,15 @@ func runAllModels(sd *common.Stable) {
 
 		fmt.Println("index:", index, "tss:", common.Tss, "model:", model)
 
-		err := pass1.FirstPass() // Set the current run parameter
-		err := firstpass(prompt, nprompt, model, r, thesteps)
+		err := pass1.FirstPass(sd) // Set the current run parameter
+		//err := firstpass(prompt, nprompt, model, r, thesteps)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "firstpass:", err)
 			continue
 		}
 
-		err = secondpass(prompt, nprompt, model, r, thesteps)
+		err = pass2.SecondPass(sd)
+		//err = secondpass(prompt, nprompt, model, r, thesteps)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "secondpass:", err)
 			continue
