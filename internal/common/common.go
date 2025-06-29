@@ -16,19 +16,38 @@ type Startup struct {
 	RemoveSmall    bool
 	Sampler        string
 	Count          int
+	Seed           int    // Random seed for image generation
+	SmallImage     string // Path and Name of the small image
+	LargeImage     string // Path and Name of the large image
+	JsonDesc       string // Path and Name of the JSON description file
 }
 
 type Stable struct {
-	RandomNumber int
-	SmallImage   string
-	LargeImage   string
-	Prompt       string
-	NPrompt      string
-	Model        string
-	Steps        int
-	Width        int
-	Height       int
-	Sampler      string
+	RandomNumber   int
+	SmallImage     string // Path and Name of the small image
+	LargeImage     string // Path and Name of the large image
+	JsonDesc       string // Path and Name of the JSON description file
+	Prompt         string
+	NPrompt        string
+	Model          string
+	Steps          int
+	Width          int
+	Height         int
+	Sampler        string
+	Seed           int      // Random seed for image generation
+	ModelsLocation string   // Directory where models are stored
+	LoraLocation   string   // Directory where LoRA models are stored
+	UserHome       string   // User's home directory
+	ImageHome      string   // Directory where images are stored
+	ScaleUp        bool     // Whether to scale up the image
+	RemoveSmall    bool     // Whether to remove small images after processing
+	Count          int      // Number of images to generate
+	Models         []string // List of models available for image generation
+	Loras          []string // List of LoRA models available
+	Samplers       []string // List of samplers available
+	CurrentHome    string   // Current working directory
+	Smallpy        string   // Path to the small image Python script
+	Largepy        string   // Path to the large image Python script
 }
 
 var Samplers []string     // List of samplers
@@ -36,10 +55,13 @@ var BaseModels []string   // List of models in the directory
 var RunThisSampler string // The sampler to run, set by the user
 
 // var timedir string
-var Tss string
+
+var ImageDirectory string // directory where the images are stored
 var Cmd *exec.Cmd
 var Width, Height int
 var UserDir string
+
+var CurrentRun Startup // The current run parameters
 
 /*
 type EasyDiffusion struct {
