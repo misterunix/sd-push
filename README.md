@@ -4,3 +4,8 @@
 
 At this time it meets my needs, so I need others to help make the project better.
 
+
+
+- Define a config struct
+
+- Check for a config json
